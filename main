@@ -1,0 +1,97 @@
+import tkinter
+from tkinter.constants import LEFT, RIGHT
+from MHD import Graph
+
+form = tkinter.Tk()
+form.title("Graph as list of neighbours")
+canvas = tkinter.Canvas(form, width=600, height=400, bg='white')
+canvas.pack(side = RIGHT)
+
+label4 = tkinter.Label(text = 'red')
+entry4 = tkinter.Entry(form)
+
+label5 = tkinter.Label(text = 'blue')
+entry5 = tkinter.Entry(form)
+
+label6 = tkinter.Label(text = 'green')
+entry6 = tkinter.Entry(form)
+
+label4.pack()
+entry4.pack()
+
+label5.pack()
+entry5.pack()
+
+label6.pack()
+entry6.pack()
+
+label7 = tkinter.Label(text = 'insert color of road')
+label7.pack()
+entry7 = tkinter.Entry(form)
+entry7.pack()
+
+label1 = tkinter.Label(text = "Enter time between stops")
+label1.pack()
+entry1 = tkinter.Entry(form)
+entry1.pack()
+
+label2 = tkinter.Label(text = "Enter start of the path")
+label2.pack()
+entry2 = tkinter.Entry(form)
+entry2.pack()
+
+label3 = tkinter.Label(text = "Enter end of the path")
+label3.pack()
+entry3 = tkinter.Entry(form)
+entry3.pack()
+
+
+button1 = tkinter.Button(text = 'Dijkstra', bd = "3px", command = lambda:runDijkstra(int(entry2.get()), int(entry3.get())))
+button1.pack()
+
+
+graph = Graph()
+marked = None
+
+
+def runDijkstra(start, end):
+    graph.dijkstra(graph.nodes[start], graph.nodes[end], canvas)
+
+
+def insert_Node(event):
+    graph.insert(event.x, event.y, entry4.get(), entry5.get(), entry6.get())
+    graph.draw(canvas)
+
+
+def connect_node(event):
+    global marked
+    for node in graph.nodes:
+        if event.x - 20 < node.x <= event.x + 20 and event.y - 20 < node.y <= event.y + 20:
+            if marked == None:
+                marked = node
+            else:
+                if marked == node:
+                    pass
+                else:
+                    value = entry1.get()
+                    if value == '':
+                        value = int(0)
+                    graph.connect(node, marked, value, entry7.get())
+                    marked = None
+                    graph.draw(canvas)
+
+
+def remove(event):
+    for node in graph.nodes:
+        if event.x - 20 < node.x <= event.x + 20 and event.y - 20 < node.y <= event.y + 20:
+            graph.remove(node)
+            graph.draw(canvas)
+            break
+
+canvas.bind("<Button-1>", insert_Node)
+canvas.bind("<Button-2>", remove)
+canvas.bind("<Button-3>", connect_node)
+
+canvas.mainloop()
+
+

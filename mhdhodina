@@ -1,0 +1,143 @@
+from heapq import heappop, heappush, heapify
+import random
+
+#TO DO: spajanie len rovnake linky, pridat linku zastavke - add node destroyed, DIJKSTRA, save, names error(line 43)
+
+class Node:
+    NodeID = 0
+
+    def __init__(self, x, y, r, b, g, meno):
+        self.x = x
+        self.y = y
+        self.neighbours = [] # [[next node, price, color],[ , , ], ...]
+        self.color=[r, b, g]
+        self.id = Node.NodeID
+        self.price = 1000  #zastavka zdrzi autobus na minutu    ... kludne to zvacste / zmente     ...bude to v Dijkstre
+        self.prev = None  #len pri hladani cesty ...nech sa nevraciame
+        Node.NodeID += 1
+        self.visited = False
+        self.name = meno
+
+    def add(self, node, value, color):
+        self.neighbours.append([node, value, color])
+        node.neighbours.append([self, value, color])
+
+    def remove(self, node):
+        for i in self.neighbours:
+            if self.neighbours[i][0] == node:    #if i[0] == node:  --> does the same
+                self.neighbours.remove(self.neighbours[i]) #self.neighbours[i] == i
+                node.neighbours.remove([self, i[1]])
+                break
+    def __lt__(self, other):
+        return self.price < other.price
+
+class Graph:
+    def __init__(self):
+        self.nodes = []
+        self.visited = []
+        self.prestupy = 0
+        self.color = 0
+        self.name = []
+    
+    def findnode(self, x, y, r, g, b):
+        for node in self.nodes:
+            if node.x-20 < x < node.x+20 and node.y-20 < y < node.y+20:
+                if r != '':
+                    node.color[0] = r
+                if b != '':
+                    node.color[1] = b
+                if g != '':
+                    node.color[2] = g
+                break
+
+    def insert(self, x, y, r, b, g, name):
+        if name in self.name:
+            pass
+        else:
+            self.nodes.append(Node(x, y, r, b, g, name))
+            self.nazvy.append(name)
+
+    def connect(self, nodea, nodeb, value, color):
+        nodea.add(nodeb, value, color)
+
+    def remove(self, node):
+        print(node.neighbours)
+        while node.neighbours != []:
+            node.remove(node.neighbours[0])
+            print(node.neighbours)
+        self.nodes.remove(node)
+
+    def dijkstra(self, start, end, canvas):
+        for i in self.nodes:
+            i.price = 100000
+            i.prev = None
+        l = []
+        for i in self.nodes:
+            heappush(l, i)
+        start.price = 0
+
+        while l:
+            for pair in l[0].neighbours:
+                if pair[0].price > int(pair[1]) + l[0].price:
+                    pair[0].price = int(pair[1]) + l[0].price
+                    pair[0].prev = l[0]
+            heappop(l)
+
+        temp = end
+        end.prev = 101
+        i = 102
+        while temp != start:
+            zoznam = temp.neighbours
+            for next in temp.neigbours:
+                if next.color[self.color]:
+                    zoznam.append(next)
+            if zoznam == []:
+                zoznam = temp.neigbours
+            for next in zoznam:
+                if temp.price == int(next[1]) + next[0].price:
+                    next[0].prev = int(i)
+                    i +=1
+                    temp = next[0]
+                    break
+                if next == zoznam[-1]:
+                    for next in temp.neigbours:
+                        if temp.price == int(next[1]) + next[0].price:
+                            next[0].prev = int(i)
+                            i += 1
+                            temp = next[0]
+                            break
+
+
+        self.draw(canvas)
+
+
+
+    def draw(self, canvas):
+        canvas.delete("all")
+        for i in self.nodes:
+            canvas.create_oval(i.x - 20, i.y - 20, i.x + 20, i.y + 20)
+            if i.color[0] == 'True':
+                canvas.create_oval(i.x - 24, i.y - 24, i.x + 24, i.y + 24, outline = 'red')
+                canvas.create_oval(i.x - 20, i.y - 20, i.x + 20, i.y + 20, outline = 'white')
+            if i.color[1] == 'True':
+                canvas.create_oval(i.x - 22, i.y - 22, i.x + 22, i.y + 22, outline = 'blue')
+                canvas.create_oval(i.x - 20, i.y - 20, i.x + 20, i.y + 20, outline = 'white')
+            if i.color[2] == 'True':
+                canvas.create_oval(i.x - 26, i.y - 26, i.x + 26, i.y + 26, outline = 'green')
+                canvas.create_oval(i.x - 20, i.y - 20, i.x + 20, i.y + 20, outline = 'white')
+            canvas.create_text(i.x, i.y - 7, text=i.id, font="Arial 11 bold")
+            canvas.create_text(i.x, i.y + 7, text=i.price, font="Arial 11 bold")
+            if type(i.prev) == int:
+                canvas.create_oval(i.x - 21, i.y - 21, i.x + 21, i.y + 21, outline = 'blue')
+            for j in i.neighbours:
+                canvas.create_line(i.x, i.y, j[0].x, j[0].y, fill='grey')
+                if j[2]== 'red':
+                    canvas.create_line(i.x+2, i.y, j[0].x+2, j[0].y, fill='red')
+                if j[2]== 'blue':
+                    canvas.create_line(i.x+4, i.y, j[0].x+4, j[0].y, fill='blue')
+                if j[2]== 'green':
+                    canvas.create_line(i.x-2, i.y, j[0].x-2, j[0].y, fill='green')
+                canvas.create_text((i.x + j[0].x) / 2, (i.y + j[0].y) / 2, text=j[1])
+                if type(i.prev) == int and type(j[0].prev) == int:
+                    if 1 >= i.prev - j[0].prev >= -1:
+                        canvas.create_line(i.x, i.y+1, j[0].x, j[0].y+1, fill='blue')

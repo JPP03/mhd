@@ -2,6 +2,8 @@ from heapq import heappop, heappush, heapify
 import random
 
 
+#TO DO: spajanie len rovnake linky, pridat linku zastavke?, DIJKSTRA, GUI, 
+
 class Node:
     NodeID = 0
 
